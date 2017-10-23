@@ -67,7 +67,7 @@ public class UserNote {
 
         return true;
     }
-
+   
     @Override
     public int hashCode() {
         int result = id;
