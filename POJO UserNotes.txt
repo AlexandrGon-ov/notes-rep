@@ -1,0 +1,54 @@
+package ru.alex.goncharov.ui.components;
+
+
+import java.util.ArrayList;
+import java.util.Date;
+
+public class UserNotes {
+
+        private int id;
+        private String noteName;
+        private String description;
+        private Date date;
+
+
+        public UserNotes( String noteName, String description, Date date) {
+            this.noteName = noteName;
+            this.description = description;
+            this.date = date;
+
+        }
+
+        public int getId() {
+            return id;
+        }
+
+        public void setId(int id) {
+            this.id = id;
+        }
+
+        public String getNoteName() {
+            return noteName;
+        }
+
+        public void setNoteName(String noteName) {
+            this.noteName = noteName;
+        }
+
+        public String getDescription() {
+            return description;
+        }
+
+        public void setDescription(String description) {
+            this.description = description;
+        }
+
+        public Date getDate() {
+            return date;
+        }
+
+        public void setDate(Date date) {
+            this.date = date;
+        }
+    
+}
