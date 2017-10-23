@@ -39,7 +39,7 @@ public class AppRunner extends Application {
         root.setAlignment(Pos.TOP_RIGHT);
         root.getChildren().add(createButton);
 
-        myStage.setTitle("Заметки");
+        myStage.setTitle("Notes");
 
         Scene myScene = new Scene(root, 450, 300);
         myStage.setScene(myScene);
