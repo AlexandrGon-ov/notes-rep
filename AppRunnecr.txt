@@ -1,0 +1,50 @@
+package ru.alex.goncharov.db;
+
+import javafx.application.Application;
+import javafx.scene.*;
+import javafx.stage.*;
+import javafx.scene.layout.*;
+import javafx.scene.control.*;
+import javafx.geometry.*;
+
+
+
+
+public class AppRunner extends Application {
+    
+    protected Button createButton;
+    protected TextArea textArea;
+    protected NewWindow newWindow;
+    protected Stage secondStage;
+    protected NewWindow tabl = new NewWindow();
+
+
+    public static void main(String[] args) {launch(args);}
+
+    public void start(Stage myStage) {
+        myStage.setTitle("Notes");
+
+        StackPane root = new StackPane();
+        root.setPadding(new Insets(5));
+        root.getChildren().add(tabl.tableViewer());
+
+        createButton = new Button("Create a new note");
+        createButton.setOnAction(event -> {
+            newWindow = new NewWindow();
+            secondStage = newWindow.createNewWindow();
+            secondStage.initOwner(myStage);
+            secondStage.show();
+
+        });
+        root.setAlignment(Pos.TOP_RIGHT);
+        root.getChildren().add(createButton);
+
+        myStage.setTitle("Заметки");
+
+        Scene myScene = new Scene(root, 450, 300);
+        myStage.setScene(myScene);
+
+        myStage.setScene(myScene);
+        myStage.show();
+    }
+}
