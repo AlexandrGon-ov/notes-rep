@@ -1,32 +1,71 @@
 package ru.alex.goncharov.db;
 
-import javafx.scene.Scene;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
+import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
-import ru.alex.goncharov.db.UserNote;
-import ru.alex.goncharov.ui.components.UserNotes;
+import javafx.scene.control.cell.TextFieldTableCell;
 
 
 public class UserTable {
+    private int row;
+    private TableView<UserNote> userTable;
 
     public TableView<UserNote> createTable() {
-        TableView<UserNote> userTable = new TableView<>();
+        userTable = new TableView<>();
 
-        TableColumn<UserNote, String> userNoteCol = new TableColumn<>("Notes");
-        TableColumn<UserNote,String> descriptionCol = new TableColumn<>("Description");
-        TableColumn<UserNote, String>  noteDateCol = new TableColumn<>("Date");
+        userTable.setEditable(true);
+        TableColumn<UserNote, String> userNoteCol = new TableColumn<>("NoteName");
+        TableColumn<UserNote, String> descriptionCol = new TableColumn<>("Description");
+        TableColumn<UserNote, String> noteDateCol = new TableColumn<>("Date");
 
-        userNoteCol.setMinWidth(100);
-        descriptionCol.setMinWidth(100);
-        noteDateCol.setMinWidth(128);
+        userNoteCol.setSortable(true);
 
-        userNoteCol.setCellValueFactory(new PropertyValueFactory<>("noteName"));
+        userNoteCol.setMinWidth(150);
+        userNoteCol.setMaxWidth(150);
+        descriptionCol.setMinWidth(600);
+        descriptionCol.setMaxWidth(600);
+        noteDateCol.setMinWidth(150);
+        noteDateCol.setMaxWidth(150);
+
+        userNoteCol.setCellValueFactory(new PropertyValueFactory<>("usrNote"));
         descriptionCol.setCellValueFactory(new PropertyValueFactory<>("description"));
         noteDateCol.setCellValueFactory(new PropertyValueFactory<>("date"));
+
+        userNoteCol.setCellFactory(TextFieldTableCell.forTableColumn());
+        userNoteCol.setOnEditCommit(this::editingTableNote);
+
+        descriptionCol.setCellFactory(TextFieldTableCell.forTableColumn());
+        descriptionCol.setOnEditCommit(this::editingTableDescription);
+
 
         userTable.getColumns().addAll(userNoteCol, descriptionCol, noteDateCol);
 
         return userTable;
     }
+
+
+    protected void editingTableNote(TableColumn.CellEditEvent<UserNote, String> ae) {
+        TablePosition<UserNote, String> position = ae.getTablePosition();
+
+        String newFullNotesName = ae.getNewValue();
+        row = position.getRow();
+        UserNote user = ae.getTableView().getItems().get(row);
+        user.setUsrNote(newFullNotesName);
+    }
+
+    protected void editingTableDescription(TableColumn.CellEditEvent<UserNote, String> ae) {
+        TablePosition<UserNote, String> position = ae.getTablePosition();
+
+        String newFullDescriptionName = ae.getNewValue();
+        row = position.getRow();
+        UserNote user = ae.getTableView().getItems().get(row);
+        user.setDescription(newFullDescriptionName);
+    }
+
+    protected void deleteNote() {
+        int selected = userTable.getSelectionModel().getSelectedIndex();
+        if (selected > -1) {
+            userTable.getItems().remove(selected);
+        } else DeleteErrorAlert.showAlert();
+    }
+
 }

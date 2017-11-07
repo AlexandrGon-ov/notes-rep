@@ -1,4 +1,4 @@
-ppackage ru.alex.goncharov.db;
+﻿package ru.alex.goncharov.db;
 
 import javafx.application.Application;
 import javafx.collections.FXCollections;
@@ -10,7 +10,7 @@ import javafx.scene.control.*;
 import javafx.geometry.*;
 import org.hibernate.Query;
 import org.hibernate.Session;
-import ru.alex.goncharov.ui.components.UserNotes;
+import ru.alex.goncharov.ui.components.MenuBarForUserTable;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -19,16 +19,15 @@ import java.util.List;
 
 public class AppRunner extends Application {
 
-    protected Button createButton;
-    protected TextArea textArea;
     protected NewWindow newWindow;
     protected Stage secondStage;
     protected static TableView<UserNote> table;
     protected UserTable newTable;
-    protected ObservableList<UserNote> userNotesTableContent = FXCollections.observableArrayList();
+    protected static ObservableList<UserNote> userNote1TableContent = FXCollections.observableArrayList();
     protected List<UserNote> userList = new ArrayList<>();
     protected UserNote loadedNote;
     protected List loadedList;
+    private MenuBarForUserTable menuBar = new MenuBarForUserTable();
 
 
     public static void main(String[] args) {
@@ -39,38 +38,42 @@ public class AppRunner extends Application {
         getUser();
         newTable = new UserTable();
         table = newTable.createTable();
-        userNotesTableContent.addAll(userList);
-        table.setItems(userNotesTableContent);
+        userNote1TableContent.addAll(userList);
+        table.setItems(userNote1TableContent);
+
     }
 
     public void start(Stage myStage) {
         myStage.setTitle("Notes");
+        MenuBar bar = menuBar.tableMenuBar();
 
-        StackPane root = new StackPane();
-        root.setPadding(new Insets(5));
-        root.getChildren().add(table);
+        BorderPane root = new BorderPane();
+        root.setPadding(new Insets(2));
+        root.setTop(bar);
+        root.setCenter(table);
 
-        createButton = new Button("Create a new note");
-        createButton.setOnAction(event -> {
-            newWindow = new NewWindow(userNotesTableContent);
+        menuBar.newItem.setOnAction((ae) -> {
+            newWindow = new NewWindow(userNote1TableContent);
             secondStage = newWindow.createNewWindow();
             secondStage.initOwner(myStage);
             secondStage.show();
         });
-
-        root.setAlignment(Pos.TOP_RIGHT);
-        root.getChildren().add(createButton);
+        menuBar.exitItem.setOnAction((ae) -> menuBar.actionForExitItem());
+        menuBar.deleteNote.setOnAction((ae) -> newTable.deleteNote());
 
         myStage.setTitle("Заметки");
-
-        Scene myScene = new Scene(root, 450, 300);
-        myStage.setScene(myScene);
-
+        Scene myScene = new Scene(root, 910, 420);
         myStage.setScene(myScene);
         myStage.show();
+        myStage.setOnCloseRequest((ae) ->
+        {
+           NewWindow newThread = new NewWindow();
+           newThread.startThread();
+        });
+
     }
 
-    void getUser() {
+    private void getUser() {
 
         Session session = HibernateSessionFactory.getSessionFactory().openSession();
         session.beginTransaction();
@@ -81,13 +84,13 @@ public class AppRunner extends Application {
         for (int i = 1; i <= loadedList.size(); i++) {
             loadedNote = session.load(UserNote.class, i);
             String getNoteFromSqlTable = loadedNote.getUsrNote();
-            String detDescriptionFromSqlTable = loadedNote.getDescription();
+            String getDescriptionFromSqlTable = loadedNote.getDescription();
             Date getDateFromSqlTable = loadedNote.getDate();
 
-            UserNotes userNote = new UserNotes(getNoteFromSqlTable, detDescriptionFromSqlTable, getDateFromSqlTable);
-            userList.add(userNote);
+            UserNotes userNotes = new UserNotes(getNoteFromSqlTable, getDescriptionFromSqlTable, getDateFromSqlTable);
+            userList.add(userNotes);
         }
         session.close();
-
     }
+
 }

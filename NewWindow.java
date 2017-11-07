@@ -1,4 +1,4 @@
-package ru.alex.goncharov.db;
+﻿package ru.alex.goncharov.db;
 
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
@@ -8,7 +8,6 @@ import javafx.scene.layout.StackPane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import org.hibernate.Session;
-import ru.alex.goncharov.ui.components.UserNotes;
 
 import java.util.Date;
 
@@ -18,19 +17,16 @@ import static javafx.geometry.Pos.*;
 public class NewWindow implements Runnable {
     private Date noteDate = new Date();
     private TextArea textArea;
-    private Button saveButton;
-    private Stage newWindow;
-    private TextField dateField;
+    private Stage newStage;
     private TextField noteName;
     private static String getNoteDescription;
     private static String getNoteName;
     private static java.sql.Date userDate;
-    private static TableView<UserNotes> table;
-    protected AppRunner appTable;
-    protected static ObservableList<UserNote> list;
+    private static ObservableList<UserNote> list;
+    private Thread thread;
 
-    public NewWindow(ObservableList<UserNote> userNotesTableContent) {
-        this.list = userNotesTableContent;
+    public NewWindow(ObservableList<UserNote> userNote1TableContent) {
+        list = userNote1TableContent;
     }
 
     public NewWindow() {
@@ -38,7 +34,7 @@ public class NewWindow implements Runnable {
 
     protected Stage createNewWindow() {
 
-        dateField = new TextField(noteDate.toString());
+        TextField dateField = new TextField(noteDate.toString());
         dateField.setEditable(false);
         dateField.setMaxWidth(300);
 
@@ -50,62 +46,87 @@ public class NewWindow implements Runnable {
         textArea.setMaxHeight(1);
         textArea.setWrapText(true);
 
-
         noteName = new TextField();
         noteName.setMaxWidth(300);
         noteName.setPromptText("Имя заметки");
 
-        saveButton = saveButton();
+        Button saveButton = saveButton();
 
 
         StackPane secondRoot = new StackPane();
         secondRoot.setPadding(new Insets(5));
+        ;
         StackPane.setAlignment(noteName, TOP_RIGHT);
         StackPane.setAlignment(saveButton, BOTTOM_RIGHT);
         StackPane.setAlignment(dateField, BOTTOM_LEFT);
         secondRoot.getChildren().addAll(noteName, textArea, dateField, saveButton);
         Scene secondScene = new Scene(secondRoot, 300, 100);
 
-        newWindow = new Stage();
-        newWindow.setTitle("Создать заметку");
-        newWindow.setScene(secondScene);
-        newWindow.initModality(Modality.WINDOW_MODAL);
 
-        return newWindow;
+        newStage = new Stage();
+        newStage.setTitle("Создать заметку");
+        newStage.setScene(secondScene);
+        newStage.initModality(Modality.WINDOW_MODAL);
+
+        return newStage;
     }
 
     private Button saveButton() {
+
         Button b = new Button("Save");
         b.setOnAction((ae) -> {
             getNoteDescription = textArea.getText();
             getNoteName = noteName.getText();
             userDate = new java.sql.Date(new java.util.Date().getTime());
-            UserNote user = new UserNotes(getNoteName, getNoteDescription, userDate);
-            appTable = new AppRunner();
+            UserNotes user = new UserNotes(getNoteName, getNoteDescription, userDate);
             list.add(user);
             AppRunner.table.setItems(list);
-
-            new Thread(this).start();
-            newWindow.close();
+            newStage.close();
         });
 
         return b;
     }
-    @Override
-    public void run() {
 
-        Session session = HibernateSessionFactory.getSessionFactory().openSession();
-
-        session.beginTransaction();
-
-        UserNote userNotesEntity = new UserNote();
-        userNotesEntity.setDescription(getNoteDescription);
-        userNotesEntity.setUsrNote(getNoteName);
-        userNotesEntity.setDate(userDate);
-        session.save(userNotesEntity);
-        session.getTransaction().commit();
-        session.close();
-
+    public void startThread() {
+        thread = new Thread(this);
+        thread.start();
     }
 
+    @Override
+    synchronized public void run() {
+        Session session1 = HibernateSessionFactory.getSessionFactory().openSession();
+        session1.beginTransaction();
+        session1.createSQLQuery("truncate table usn").executeUpdate();
+        session1.close();
+
+
+        for (int i = 0; i < AppRunner.userNote1TableContent.size(); i++) {
+            Session session = HibernateSessionFactory.getSessionFactory().openSession();
+            session.beginTransaction();
+
+            String userNote;
+            String userDescription;
+            Date date;
+
+            UserNote currentUserFromJavaTable = AppRunner.userNote1TableContent.get(i);
+            userNote = currentUserFromJavaTable.getUsrNote();
+            userDescription = currentUserFromJavaTable.getDescription();
+            date = currentUserFromJavaTable.getDate();
+
+            UserNote addNoteInSqlTable = new UserNote();
+            addNoteInSqlTable.setUsrNote(userNote);
+            addNoteInSqlTable.setDescription(userDescription);
+            addNoteInSqlTable.setDate((java.sql.Date) date);
+
+            session.saveOrUpdate(addNoteInSqlTable);
+            session.flush();
+            session.getTransaction().commit();
+            session.close();
+        }
+
+        thread.interrupt();
+        System.exit(0);
+
+
+    }
 }
